@@ -1,4 +1,4 @@
-name: Build LinkyBot APK
+name: Minimal GUI Test Build
 
 on:
   push:
@@ -11,25 +11,21 @@ jobs:
 
     steps:
     - name: Set up JDK 17
-      uses: actions/setup-java@v3
+      uses: actions/setup-java@v4
       with:
         java-version: '17'
         distribution: 'temurin'
 
     - name: Proje Dosyalarını Oluştur
       run: |
-        mkdir -p app/src/main/java/com/example/linkybot
+        mkdir -p app/src/main/java/com/example/testapp
         mkdir -p app/src/main/res/layout
-        mkdir -p app/src/main/res/xml
-        mkdir -p app/src/main/res/values
 
-        # 1. settings.gradle
         cat << 'EOF' > settings.gradle
-        rootProject.name = "LinkyBot"
+        rootProject.name = "TestApp"
         include ':app'
         EOF
 
-        # 2. build.gradle (Project)
         cat << 'EOF' > build.gradle
         buildscript {
             ext.kotlin_version = '1.9.0'
@@ -42,17 +38,16 @@ jobs:
         allprojects { repositories { google(); mavenCentral() } }
         EOF
 
-        # 3. app/build.gradle
         cat << 'EOF' > app/build.gradle
         plugins {
             id 'com.android.application'
             id 'kotlin-android'
         }
         android {
-            namespace 'com.example.linkybot'
+            namespace 'com.example.testapp'
             compileSdk 34
             defaultConfig {
-                applicationId "com.example.linkybot"
+                applicationId "com.example.testapp"
                 minSdk 24
                 targetSdk 34
                 versionCode 1
@@ -68,27 +63,20 @@ jobs:
             implementation 'androidx.core:core-ktx:1.12.0'
             implementation 'androidx.appcompat:appcompat:1.6.1'
             implementation 'com.google.android.material:material:1.11.0'
-            implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3'
         }
         EOF
 
-        # 4. gradle.properties
         cat << 'EOF' > gradle.properties
         org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8
         android.useAndroidX=true
         EOF
 
-        # 5. AndroidManifest.xml
         cat << 'EOF' > app/src/main/AndroidManifest.xml
         <?xml version="1.0" encoding="utf-8"?>
         <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-            <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
-            <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-            <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
             <application
                 android:allowBackup="true"
-                android:label="Linky Bot"
-                android:supportsRtl="true"
+                android:label="Test GUI App"
                 android:theme="@style/Theme.AppCompat.Light.NoActionBar">
                 <activity android:name=".MainActivity" android:exported="true">
                     <intent-filter>
@@ -96,289 +84,40 @@ jobs:
                         <category android:name="android.intent.category.LAUNCHER" />
                     </intent-filter>
                 </activity>
-                <service android:name=".FloatingService" android:enabled="true" android:exported="false" />
-                <service android:name=".BotAccessibilityService" android:exported="true" android:label="Linky Bot Otomasyon" android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
-                    <intent-filter>
-                        <action android:name="android.accessibilityservice.AccessibilityService" />
-                    </intent-filter>
-                    <meta-data android:name="android.accessibilityservice" android:resource="@xml/accessibility_config" />
-                </service>
             </application>
         </manifest>
         EOF
 
-        # 6. accessibility_config.xml
-        cat << 'EOF' > app/src/main/res/xml/accessibility_config.xml
-        <?xml version="1.0" encoding="utf-8"?>
-        <accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
-            android:accessibilityEventTypes="typeWindowStateChanged|typeWindowContentChanged"
-            android:accessibilityFeedbackType="feedbackGeneric"
-            android:accessibilityFlags="flagDefault|flagRetrieveInteractiveWindows"
-            android:canRetrieveWindowContent="true"
-            android:canPerformGestures="true"
-            android:description="Linky uygulamasında otomatik mesaj göndermek için gereklidir." />
-        EOF
-
-        # 7. activity_main.xml
         cat << 'EOF' > app/src/main/res/layout/activity_main.xml
         <?xml version="1.0" encoding="utf-8"?>
         <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
             android:layout_width="match_parent" android:layout_height="match_parent"
-            android:orientation="vertical" android:gravity="center" android:padding="20dp" android:background="#121212">
+            android:orientation="vertical" android:gravity="center" android:background="#222222">
             <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                android:text="🔵 LINKY OTO BOT" android:textColor="#00d2ff" android:textSize="24sp" android:textStyle="bold" android:layout_marginBottom="30dp"/>
-            <Button android:id="@+id/btnPermissionOverlay" android:layout_width="match_parent" android:layout_height="60dp"
-                android:text="1. Üstte Gösterme İzni Ver" android:backgroundTint="#c59b27" android:layout_marginBottom="15dp"/>
-            <Button android:id="@+id/btnPermissionAccessibility" android:layout_width="match_parent" android:layout_height="60dp"
-                android:text="2. Erişilebilirlik İzni Ver" android:backgroundTint="#00838f" android:layout_marginBottom="15dp"/>
-            <Button android:id="@+id/btnStartFloating" android:layout_width="match_parent" android:layout_height="60dp"
-                android:text="3. BOT BUTONUNU GÖSTER" android:backgroundTint="#2e7d32" android:textColor="#ffffff" android:textStyle="bold"/>
+                android:text="Sistem Calisiyor!" android:textColor="#00FF00" android:textSize="24sp" android:textStyle="bold" android:layout_marginBottom="20dp"/>
+            <Button android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="Test Butonu" android:backgroundTint="#0088FF" android:textColor="#FFFFFF"/>
         </LinearLayout>
         EOF
 
-        # 8. layout_floating_widget.xml
-        cat << 'EOF' > app/src/main/res/layout/layout_floating_widget.xml
-        <?xml version="1.0" encoding="utf-8"?>
-        <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-            android:layout_width="wrap_content" android:layout_height="wrap_content" android:padding="8dp">
-            <Button android:id="@+id/btnFloatingAction" android:layout_width="80dp" android:layout_height="80dp"
-                android:text="BAŞLAT" android:textColor="#FFFFFF" android:textStyle="bold" android:backgroundTint="#2e7d32" android:elevation="5dp"/>
-        </FrameLayout>
-        EOF
-
-        # 9. MainActivity.kt
-        cat << 'EOF' > app/src/main/java/com/example/linkybot/MainActivity.kt
-        package com.example.linkybot
-        import android.content.Intent
-        import android.net.Uri
+        cat << 'EOF' > app/src/main/java/com/example/testapp/MainActivity.kt
+        package com.example.testapp
         import android.os.Bundle
-        import android.provider.Settings
-        import android.widget.Button
-        import android.widget.Toast
         import androidx.appcompat.app.AppCompatActivity
         class MainActivity : AppCompatActivity() {
             override fun onCreate(savedInstanceState: Bundle?) {
                 super.onCreate(savedInstanceState)
                 setContentView(R.layout.activity_main)
-                findViewById<Button>(R.id.btnPermissionOverlay).setOnClickListener {
-                    if (!Settings.canDrawOverlays(this)) {
-                        startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName")))
-                    } else { Toast.makeText(this, "İzin zaten verilmiş!", Toast.LENGTH_SHORT).show() }
-                }
-                findViewById<Button>(R.id.btnPermissionAccessibility).setOnClickListener {
-                    startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
-                    Toast.makeText(this, "Listeden 'Linky Bot Otomasyon'u bulup açın.", Toast.LENGTH_LONG).show()
-                }
-                findViewById<Button>(R.id.btnStartFloating).setOnClickListener {
-                    if (Settings.canDrawOverlays(this)) {
-                        startService(Intent(this, FloatingService::class.java))
-                        finish()
-                    } else { Toast.makeText(this, "Önce Üstte Gösterme izni vermelisiniz!", Toast.LENGTH_SHORT).show() }
-                }
             }
         }
         EOF
 
-        # 10. FloatingService.kt
-        cat << 'EOF' > app/src/main/java/com/example/linkybot/FloatingService.kt
-        package com.example.linkybot
-        import android.app.Service
-        import android.content.Intent
-        import android.graphics.PixelFormat
-        import android.os.IBinder
-        import android.view.Gravity
-        import android.view.LayoutInflater
-        import android.view.MotionEvent
-        import android.view.View
-        import android.view.WindowManager
-        import android.widget.Button
-        import android.widget.Toast
-        class FloatingService : Service() {
-            private lateinit var windowManager: WindowManager
-            private lateinit var floatingView: View
-            private var isBotRunning = false
-            override fun onBind(intent: Intent?): IBinder? = null
-            override fun onCreate() {
-                super.onCreate()
-                windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
-                floatingView = LayoutInflater.from(this).inflate(R.layout.layout_floating_widget, null)
-                val params = WindowManager.LayoutParams(
-                    WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.WRAP_CONTENT,
-                    WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY, WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE, PixelFormat.TRANSLUCENT
-                )
-                params.gravity = Gravity.TOP or Gravity.START
-                params.x = 0; params.y = 200
-                windowManager.addView(floatingView, params)
-                val btnAction = floatingView.findViewById<Button>(R.id.btnFloatingAction)
-                btnAction.setOnTouchListener(object : View.OnTouchListener {
-                    private var initialX = 0; private var initialY = 0
-                    private var initialTouchX = 0f; private var initialTouchY = 0f
-                    private var isClick = false
-                    override fun onTouch(v: View, event: MotionEvent): Boolean {
-                        when (event.action) {
-                            MotionEvent.ACTION_DOWN -> {
-                                initialX = params.x; initialY = params.y
-                                initialTouchX = event.rawX; initialTouchY = event.rawY
-                                isClick = true; return true
-                            }
-                            MotionEvent.ACTION_MOVE -> {
-                                val dx = (event.rawX - initialTouchX).toInt()
-                                val dy = (event.rawY - initialTouchY).toInt()
-                                if (Math.abs(dx) > 10 || Math.abs(dy) > 10) isClick = false
-                                params.x = initialX + dx; params.y = initialY + dy
-                                windowManager.updateViewLayout(floatingView, params)
-                                return true
-                            }
-                            MotionEvent.ACTION_UP -> {
-                                if (isClick) toggleBot(btnAction)
-                                return true
-                            }
-                        }
-                        return false
-                    }
-                })
-            }
-            private fun toggleBot(btn: Button) {
-                val botService = BotAccessibilityService.instance
-                if (botService == null) {
-                    Toast.makeText(this, "Erişilebilirlik servisi kapalı! Lütfen ayarlardan açın.", Toast.LENGTH_SHORT).show()
-                    return
-                }
-                isBotRunning = !isBotRunning
-                if (isBotRunning) {
-                    btn.text = "DURDUR"; btn.setBackgroundColor(android.graphics.Color.parseColor("#c59b27"))
-                    botService.startBot()
-                } else {
-                    btn.text = "BAŞLAT"; btn.setBackgroundColor(android.graphics.Color.parseColor("#2e7d32"))
-                    botService.stopBot()
-                }
-            }
-            override fun onDestroy() {
-                super.onDestroy()
-                if (::floatingView.isInitialized) windowManager.removeView(floatingView)
-            }
-        }
-        EOF
+    - name: APK'yı Derle
+      run: gradle assembleDebug
 
-        # 11. BotAccessibilityService.kt (Akıllı Versiyon)
-        cat << 'EOF' > app/src/main/java/com/example/linkybot/BotAccessibilityService.kt
-        package com.example.linkybot
-        import android.accessibilityservice.AccessibilityService
-        import android.accessibilityservice.GestureDescription
-        import android.content.Context
-        import android.graphics.Path
-        import android.graphics.Rect
-        import android.os.Bundle
-        import android.view.accessibility.AccessibilityEvent
-        import android.view.accessibility.AccessibilityNodeInfo
-        import kotlinx.coroutines.*
-        class BotAccessibilityService : AccessibilityService() {
-            companion object { var instance: BotAccessibilityService? = null }
-            private var isRunning = false
-            private var botJob: Job? = null
-            private val botScope = CoroutineScope(Dispatchers.Default)
-            private val KAYITLI_MESAJ = """🌟 GÜNCEL LİSTE 🌟
-        .
-        🔸 100 TL ➔ 3.385 C0in
-        🔸 300 TL ➔ 10.154 C0in
-        🔸 500 TL ➔ 16.923 C0in
-        🔸 800 TL ➔ 27.077 C0in
-        .
-        Sizler de indirimli fiyatlardan faydalanmak için profilimizi ziyaret edin. 📲👇🏻
-        .
-        0.530.082.39.04 W--PCoin
-        .
-        ⚠️ ÖNEMLİ: Profilimizde mavi tik bulunmaktadır."""
-            override fun onServiceConnected() { instance = this }
-            override fun onAccessibilityEvent(event: AccessibilityEvent?) {}
-            override fun onInterrupt() {}
-            override fun onUnbind(intent: android.content.Intent?): Boolean { instance = null; return super.onUnbind(intent) }
-            fun startBot() {
-                if (isRunning) return
-                isRunning = true
-                val prefs = getSharedPreferences("LinkyHistory", Context.MODE_PRIVATE)
-                botJob = botScope.launch {
-                    val processedInSession = mutableSetOf<String>()
-                    while (isRunning) {
-                        try {
-                            val rootNode = rootInActiveWindow ?: continue
-                            val chatNodes = bulSohbetButonlari(rootNode)
-                            var clickedAny = false
-                            for (node in chatNodes) {
-                                if (!isRunning) break
-                                val desc = node.parent?.contentDescription?.toString() ?: node.contentDescription?.toString() ?: "Bilinmeyen"
-                                val name = desc.split("\n")[0].trim()
-                                if (processedInSession.contains(name)) continue
-                                processedInSession.add(name)
-                                val lastSent = prefs.getLong(name, 0)
-                                val currentTime = System.currentTimeMillis()
-                                if (lastSent > 0 && (currentTime - lastSent) < 24 * 60 * 60 * 1000L) continue
-                                node.performAction(AccessibilityNodeInfo.ACTION_CLICK)
-                                delay(2000)
-                                val editTexts = bulEditText(rootInActiveWindow)
-                                if (editTexts.isNotEmpty()) {
-                                    val box = editTexts[0]
-                                    val arguments = Bundle()
-                                    arguments.putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, KAYITLI_MESAJ)
-                                    box.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, arguments)
-                                    delay(1500)
-                                    val gonderButonu = bulGonderButonu(rootInActiveWindow, box)
-                                    if (gonderButonu != null) {
-                                        gonderButonu.performAction(AccessibilityNodeInfo.ACTION_CLICK)
-                                        prefs.edit().putLong(name, System.currentTimeMillis()).apply()
-                                    } else {
-                                        box.performAction(AccessibilityNodeInfo.ACTION_IME_ENTER)
-                                    }
-                                    delay(1500)
-                                }
-                                performGlobalAction(GLOBAL_ACTION_BACK)
-                                delay(1500)
-                                performGlobalAction(GLOBAL_ACTION_BACK)
-                                delay(1500)
-                                clickedAny = true
-                            }
-                            if (!clickedAny) { swipeUp(); delay(2500) }
-                        } catch (e: Exception) { e.printStackTrace(); delay(3000) }
-                    }
-                }
-            }
-            fun stopBot() { isRunning = false; botJob?.cancel() }
-            private fun bulSohbetButonlari(root: AccessibilityNodeInfo): List<AccessibilityNodeInfo> {
-                val list = mutableListOf<AccessibilityNodeInfo>()
-                val queue = java.util.ArrayDeque<AccessibilityNodeInfo>()
-                queue.add(root)
-                while (queue.isNotEmpty()) {
-                    val node = queue.poll() ?: continue
-                    if (node.contentDescription?.contains("Sohbet") == true || node.text?.contains("Sohbet") == true) list.add(node)
-                    for (i in 0 until node.childCount) node.getChild(i)?.let { queue.add(it) }
-                }
-                return list
-            }
-            private fun bulEditText(root: AccessibilityNodeInfo?): List<AccessibilityNodeInfo> {
-                val list = mutableListOf<AccessibilityNodeInfo>()
-                if (root == null) return list
-                val queue = java.util.ArrayDeque<AccessibilityNodeInfo>()
-                queue.add(root)
-                while (queue.isNotEmpty()) {
-                    val node = queue.poll() ?: continue
-                    if (node.className == "android.widget.EditText") list.add(node)
-                    for (i in 0 until node.childCount) node.getChild(i)?.let { queue.add(it) }
-                }
-                return list
-            }
-            private fun bulGonderButonu(root: AccessibilityNodeInfo?, editText: AccessibilityNodeInfo): AccessibilityNodeInfo? {
-                if (root == null) return null
-                val editTextBounds = Rect()
-                editText.getBoundsInScreen(editTextBounds)
-                val queue = java.util.ArrayDeque<AccessibilityNodeInfo>()
-                queue.add(root)
-                val olasiButonlar = mutableListOf<AccessibilityNodeInfo>()
-                while (queue.isNotEmpty()) {
-                    val node = queue.poll() ?: continue
-                    if (node.className == "android.widget.ImageView" && node.isClickable) {
-                        val nodeBounds = Rect()
-                        node.getBoundsInScreen(nodeBounds)
-                        if (Math.abs(nodeBounds.centerY() - editTextBounds.centerY()) < 100) olasiButonlar.add(node)
-                    }
-                    for (i in 0 until node.childCount) node.getChild(i)?.let { queue.add(it) }
+    - name: APK'yı İndirilebilir Hale Getir
+      uses: actions/upload-artifact@v4
+      with:
+        name: Test-GUI-APK
+        path: app/build/outputs/apk/debug/app-debug.apk
         
